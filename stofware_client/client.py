@@ -23,7 +23,7 @@ class StofwareClient:
     def set_token(self, token: str):
         self.token = token
 
-
+   
     def _request(
         self,
         method: str,
@@ -160,7 +160,8 @@ class ApiBaseQuery:
 
         else:
             raise TypeError("filter_group must be a dict or a JSON-formatted string")
-
+        
+        return self
 
     def order_by(self, name: str, direction: QueryOrder = "DESC"):
         self.params['order_by'] = {"name": name, "direction": direction}
