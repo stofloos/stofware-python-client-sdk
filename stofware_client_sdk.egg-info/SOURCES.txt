@@ -1,0 +1,11 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+stofware_client/__init__.py
+stofware_client/client.py
+stofware_client_sdk.egg-info/PKG-INFO
+stofware_client_sdk.egg-info/SOURCES.txt
+stofware_client_sdk.egg-info/dependency_links.txt
+stofware_client_sdk.egg-info/requires.txt
+stofware_client_sdk.egg-info/top_level.txt
