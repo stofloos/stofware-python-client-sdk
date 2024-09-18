@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: stofware-client-sdk
-Version: 0.1.0
+Version: 0.1.1
 Summary: A client SDK for interacting with the Stofware API
 Home-page: https://github.com/stofloos/stofware-python-client-sdk
 Author: Stofloos

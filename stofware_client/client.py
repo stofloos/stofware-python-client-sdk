@@ -1,3 +1,4 @@
+import json
 import requests
 from typing import Optional, Union, List, Dict, Any
 
@@ -22,22 +23,91 @@ class StofwareClient:
     def set_token(self, token: str):
         self.token = token
 
-    def _request(self, method: str, endpoint: str, params: Optional[Dict] = None, data: Optional[Dict] = None) -> Dict:
+
+    def _request(
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[Union[Dict, str]] = None,
+        data: Optional[Union[Dict, str]] = None) -> Dict:
+        """
+        Makes an HTTP request to the specified endpoint with given parameters and data.
+
+        Args:
+            method (str): HTTP method (GET, POST, etc.).
+            endpoint (str): API endpoint (relative to base_url).
+            params (Optional[Union[Dict, str]]): Query parameters as dict or JSON string.
+            data (Optional[Union[Dict, str]]): Request body as dict or JSON string.
+
+        Returns:
+            Dict: Parsed JSON response from the API.
+
+        Raises:
+            ValueError: If params or data are invalid JSON strings.
+            TypeError: If params or data are not dicts or JSON strings.
+            Exception: For non-OK HTTP responses.
+        """
+        
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
-        url = f"{self.base_url}/{endpoint}"
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"  # Ensure single slash
 
-        if params:
-            params = {k: (v if not isinstance(v, list) else str(v)) for k, v in params.items()}
-        
-        response = requests.request(method, url, headers=headers, params=params, json=data)
+        # Handle params
+        processed_params = self._process_input(params, "params")
+
+        # Handle data
+        processed_data = self._process_input(data, "data")
+
+        response = requests.request(
+            method=method.upper(),
+            url=url,
+            headers=headers,
+            params=processed_params,
+            json=processed_data
+        )
 
         if not response.ok:
             raise Exception(f"{response.status_code}: {response.text}")
 
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            raise ValueError("Response content is not valid JSON")
+    
+    def _process_input(self, input_data: Optional[Union[Dict, str]], name: str) -> Optional[Union[Dict, str]]:
+        """
+        Processes input data for params or data by ensuring it's a dict or a valid JSON string.
+
+        Args:
+            input_data (Optional[Union[Dict, str]]): The input data to process.
+            name (str): Name of the parameter ('params' or 'data') for error messages.
+
+        Returns:
+            Optional[Union[Dict, str]]: Processed input data.
+
+        Raises:
+            ValueError: If input_data is a string but not valid JSON.
+            TypeError: If input_data is neither a dict nor a string.
+        """
+        if input_data is None:
+            return None
+
+        if isinstance(input_data, str):
+            try:
+                parsed = json.loads(input_data)
+                if not isinstance(parsed, dict):
+                    raise ValueError(f"The JSON string for {name} must represent an object/dictionary.")
+                return parsed
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON string for {name}: {e}") from e
+
+        elif isinstance(input_data, dict):
+            return input_data
+
+        else:
+            raise TypeError(f"{name} must be a dict or a JSON-formatted string")
 
 
 class ApiBaseQuery:
@@ -61,9 +131,36 @@ class ApiBaseQuery:
                 self.params['filter'] = {"operator": boolean_operator, "items": [{"name": name, "operator": operator, "value": value}] + self.params['filter']['items']}
         return self
 
-    def set_filter(self, filter_group: Dict):
-        self.params['filter'] = filter_group
-        return self
+    def set_filter(self, filter_group: Union[Dict, str]):
+        """
+        Sets the 'filter' parameter by accepting a dictionary or a JSON string.
+
+        Args:
+            filter_group (Union[Dict, str]): Filter criteria as a dict or JSON string.
+
+        Raises:
+            ValueError: If filter_group is a string but not valid JSON.
+            TypeError: If filter_group is neither a dict nor a string.
+        """
+        if isinstance(filter_group, dict):
+            try:
+                self.params['filter'] = json.dumps(filter_group)
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"filter_group dictionary must be serializable to JSON: {e}") from e
+
+        elif isinstance(filter_group, str):
+            # Validate that it's a valid JSON string representing a dict
+            try:
+                parsed = json.loads(filter_group)
+                if not isinstance(parsed, dict):
+                    raise ValueError("filter_group JSON string must represent an object/dictionary.")
+                self.params['filter'] = filter_group  # Store the string as is
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON string for filter_group: {e}") from e
+
+        else:
+            raise TypeError("filter_group must be a dict or a JSON-formatted string")
+
 
     def order_by(self, name: str, direction: QueryOrder = "DESC"):
         self.params['order_by'] = {"name": name, "direction": direction}

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stofware-client-sdk",  # Replace with your package name
-    version="0.1.0",
+    version="0.1.1",
     author="Stofloos",
     author_email="robin@stofloos.nl",
     description="A client SDK for interacting with the Stofware API",
