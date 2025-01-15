@@ -16,3 +16,7 @@ from stofware_client import StofwareClient
 
 client = StofwareClient("https://api.example.com", "your-token-here")
 data = client.model("your-entity").get_all()
+
+## Update pip
+python setup.py sdist bdist_wheel
+twine upload dist/*

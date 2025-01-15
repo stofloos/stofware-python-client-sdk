@@ -202,19 +202,19 @@ class ApiModelQuery(ApiBaseQuery):
         return self.client._request("GET", f"aggregate/{self.model}", self.params)
 
     def post(self, data: Dict):
-        return self.client._request("POST", f"models/{self.model}", None, data)
+        return self.client._request("POST", f"models/{self.model}", self.params, data)
 
     def put(self, id: Union[int, str], data: Dict):
-        return self.client._request("PUT", f"models/{self.model}/{id}", None, data)
+        return self.client._request("PUT", f"models/{self.model}/{id}", self.params, data)
 
     def bulk_put(self, data: Dict):
-        return self.client._request("PUT", f"models/{self.model}", None, data)
+        return self.client._request("PUT", f"models/{self.model}", self.params, data)
 
     def delete(self, id: Union[int, str]):
         return self.client._request("DELETE", f"models/{self.model}/{id}")
 
     def bulk_delete(self, data: Dict):
-        return self.client._request("DELETE", f"models/{self.model}", None, data)
+        return self.client._request("DELETE", f"models/{self.model}", self.params, data)
 
 
 class ApiViewQuery(ApiBaseQuery):
